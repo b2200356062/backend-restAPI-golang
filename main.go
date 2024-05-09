@@ -3,6 +3,7 @@ package main
 import (
 	"staj/controllers"
 	"staj/initializers"
+	"staj/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,15 +20,19 @@ func main() {
 
 	router.POST("/login", controllers.Login)
 
-	router.POST("/createlist", controllers.CreateTODOList)
+	router.POST("/createlist", middleware.RequireAuth, controllers.CreateTODOList)
 
-	router.GET("/getlists", controllers.GetToDoLists)
+	router.GET("/getlists", middleware.RequireAuth, controllers.GetToDoLists)
 
-	router.PUT("/deletelist/:id", controllers.DeleteToDoList)
+	router.PUT("/deletelist", middleware.RequireAuth, controllers.DeleteToDoList)
 
-	router.POST("/createmessage", controllers.CreateToDoMessage)
+	router.POST("/createmessage", middleware.RequireAuth, controllers.CreateToDoMessage)
 
-	router.PUT("/deletemessage/:id", controllers.DeleteToDoMessage)
+	router.PUT("/deletemessage/:id", middleware.RequireAuth, controllers.DeleteToDoMessage)
+
+	router.PUT("/updatemessage/:id", middleware.RequireAuth, controllers.UpdateToDoMessage)
+
+	//router.GET("/validate", middleware.RequireAuth, controllers.Validate)
 
 	router.Run("localhost:8080")
 

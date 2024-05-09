@@ -112,7 +112,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "failed to create JWT token",
 		})
-
 		return
 	}
 
@@ -121,9 +120,18 @@ func Login(c *gin.Context) {
 		fmt.Print("user type: ", user.Type)
 	}
 
-	// success
-	c.JSON(200, gin.H{
-		"token": tokenString,
-	})
+	c.SetSameSite(http.SameSiteLaxMode)
 
+	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true) // false can be true
+}
+
+func getCurrentUser(c *gin.Context) *models.User {
+	user, _ := c.Get("user")
+	// Type assert user to models.User
+	userModel, ok := user.(models.User)
+	if !ok {
+		// Handle the case where user is not of type models.User
+		return nil
+	}
+	return &userModel
 }

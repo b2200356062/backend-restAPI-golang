@@ -26,6 +26,8 @@ func ConnectToDB() {
 	}
 
 	// auto migration for create, update and delete times
+	// creates a mock database called test.db
+
 	DB.AutoMigrate(&models.User{}, &models.ToDoList{}, &models.ToDoListMessage{})
 
 }

@@ -4,15 +4,7 @@ go 1.22.3
 
 require github.com/gin-gonic/gin v1.10.0
 
-require (
-	github.com/fatih/color v1.9.0 // indirect
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/githubnemo/CompileDaemon v1.4.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/joho/godotenv v1.5.1
-	github.com/mattn/go-colorable v0.1.4 // indirect
-	github.com/radovskyb/watcher v1.0.7 // indirect
-)
+require github.com/golang-jwt/jwt/v5 v5.2.1
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
@@ -38,7 +30,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
+	golang.org/x/crypto v0.23.0
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect

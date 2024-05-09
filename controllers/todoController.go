@@ -10,12 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//TODO: JWT İLE AUTHORİZATİON SAĞLA
-
 func CreateTODOList(c *gin.Context) {
 
 	var body struct {
-		Owner              string
 		ListCompletionRate float64
 		Messages           []models.ToDoListMessage
 	}
@@ -28,12 +25,34 @@ func CreateTODOList(c *gin.Context) {
 		return
 	}
 
-	todolist := models.ToDoList{Owner: body.Owner, ListCompletionRate: body.ListCompletionRate, Messages: body.Messages}
+	// gets current user name from validation
+	owner := getCurrentUser(c)
+
+	// each user can have 1 TO-DO list
+	if owner.HasList != 0 {
+		c.JSON(http.StatusNotAcceptable, "Each user can only have 1 TO-DO list")
+		return
+	}
+
+	todolist := models.ToDoList{Owner: owner.Name, ListCompletionRate: body.ListCompletionRate, Messages: body.Messages}
 	result := initializers.DB.Create(&todolist)
 
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "failed to create TO-DO List",
+		})
+		return
+	}
+
+	// when a user creates a TO-DO list, users "HasList" attribute is equal to that TO-DO lists ID
+	owner.HasList = int(todolist.ID)
+	// update database
+
+	result2 := initializers.DB.Save(owner)
+
+	if result2.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to update owner's TO-DO list",
 		})
 		return
 	}
@@ -46,22 +65,36 @@ func CreateTODOList(c *gin.Context) {
 
 func GetToDoLists(c *gin.Context) {
 
-	var todolists []models.ToDoList
+	var todolists models.ToDoList
+
+	// gets the current user's name,
+	owner := getCurrentUser(c)
 
 	// returns todo lists with messages loaded
+	result := initializers.DB.Model(&models.ToDoList{}).Where("owner = ?", owner.Name).Preload("Messages").Find(&todolists)
 
-	result := initializers.DB.Model(&models.ToDoList{}).Preload("Messages").Find(&todolists).Error
-
-	if result != nil {
+	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve TO-DO lists",
+			"error": "Failed to retrieve TO-DO list",
+		})
+		return
+	}
+
+	var listResponse models.ToDoListResponse
+	listResponse.Messages = todolists.Messages
+	listResponse.ListCompletionRate = todolists.ListCompletionRate
+
+	// if list is empty;
+	if owner.HasList == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			fmt.Sprintf("TO-DO List for User %s", owner.Name): "No TO-DO list yet.",
 		})
 		return
 	}
 
 	// return response
 	c.JSON(http.StatusOK, gin.H{
-		"todolists": todolists,
+		fmt.Sprintf("TO-DO List for User %s", owner.Name): listResponse,
 	})
 }
 
@@ -70,22 +103,50 @@ func DeleteToDoList(c *gin.Context) {
 	var todolists models.ToDoList
 	var messages []models.ToDoListMessage
 
-	todolistID := c.Param("id")
+	owner := getCurrentUser(c)
 
-	//FIXME: update ve delete zamanı milimlerle farklı
+	todolistID := owner.HasList
 
 	// update modify time, update delete time, but not actually delete the record
-	initializers.DB.Model(&todolists).Where("id = ?", todolistID).Update("deleted_at", time.Now())
+	result := initializers.DB.Model(&todolists).Where("id = ?", todolistID).Update("deleted_at", time.Now())
 
-	// same for messages for the todolist
-	initializers.DB.Model(&messages).Where("to_do_list_id = ?", todolistID).Update("deleted_at", time.Now())
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete TO-DO list",
+		})
+		return
+	}
+
+	// same for messages in the TO-DO list
+	result_message := initializers.DB.Model(&messages).Where("to_do_list_id = ?", todolistID).Update("deleted_at", time.Now())
+
+	if result_message.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "List is already empty",
+		})
+		return
+	}
+
+	// update user's HasList attribute after deletion
+	owner.HasList = 0
+
+	// update database for owner of the list
+	result2 := initializers.DB.Save(owner)
+
+	if result2.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to update owner's TO-DO list",
+		})
+		return
+	}
 
 	// success message
 	c.JSON(200, gin.H{
-		"message": "ToDo List deleted successfully",
+		"message": "TO-DO List deleted successfully",
 	})
 }
 
+// create message for current user's TO-DO list
 func CreateToDoMessage(c *gin.Context) {
 
 	var body struct {
@@ -102,7 +163,16 @@ func CreateToDoMessage(c *gin.Context) {
 		return
 	}
 
-	message := models.ToDoListMessage{ToDoListID: body.ToDoListID, Content: body.Content, IsItDone: body.IsItDone}
+	owner := getCurrentUser(c)
+
+	todolistID := owner.HasList
+
+	if todolistID == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, "Please create a TO-DO list")
+		return
+	}
+
+	message := models.ToDoListMessage{ToDoListID: todolistID, Content: body.Content, IsItDone: body.IsItDone}
 	result := initializers.DB.Create(&message)
 
 	if result.Error != nil {
@@ -113,18 +183,19 @@ func CreateToDoMessage(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message": fmt.Sprintf("TO-DO message to list {%d} is created successfully", message.ToDoListID),
+		"message": "TO-DO message created successfully",
 	})
 
 }
 
+// "delete" message
 func DeleteToDoMessage(c *gin.Context) {
 
 	var message models.ToDoListMessage
 
 	messageID := c.Param("id")
 
-	// update modify time, update delete time, but not actually delete the record
+	// update modify time, update delete time, but not actually delete the message
 	initializers.DB.Model(&message).Where("id = ?", messageID).Update("deleted_at", time.Now())
 
 	// success message
@@ -133,6 +204,36 @@ func DeleteToDoMessage(c *gin.Context) {
 	})
 }
 
-func UpdateToDoMessage() {
+// update message
+func UpdateToDoMessage(c *gin.Context) {
 
+	var body struct {
+		Content  string `json:"content"`
+		IsItDone bool   `json:"isitdone"`
+	}
+
+	if c.Bind(&body) != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "failed to read TO-DO message body",
+		})
+		return
+	}
+
+	var message models.ToDoListMessage
+
+	messageID := c.Param("id")
+
+	// users can update both content and completion
+	result := initializers.DB.Model(&message).Where("id = ?", messageID).Updates(models.ToDoListMessage{Content: body.Content, IsItDone: body.IsItDone})
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to update TO-DO message",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "TO-DO message updated successfully",
+	})
 }

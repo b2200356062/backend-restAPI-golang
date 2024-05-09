@@ -18,37 +18,15 @@ type ToDoListMessage struct {
 	IsItDone   bool   `json:"isitdone"`
 }
 
-// response for encapsulation of the todolist
+// response for encapsulation of the TO-DO list and messages
 
-// type ToDoListResponse struct {
-// 	// returns the fields below
-// 	Owner              string            `json:"owner"`
-// 	Messages           []ToDoListMessage `json:"messages"`
-// 	ListCompletionRate float64           `json:"listcompletionrate"`
-// 	CreatedAt          time.Time         `json:"created_at"`
-// 	UpdatedAt          time.Time         `json:"updated_at"`
-// 	DeletedAt          time.Time         `json:"deleted_at"`
-// }
+type ToDoListResponse struct {
+	Messages           []ToDoListMessage `json:"messages"`
+	ListCompletionRate float64           `json:"listcompletionrate"`
+}
 
-// // using the response struct
-// var response []models.ToDoListResponse
-
-// for _, todo := range todolists {
-
-// 	// if the record is not deleted, it is visible. however, if it seems deleted,
-// 	// its hidden in the response but visible in the database
-
-// 	if !todo.DeletedAt.Time.IsZero() {
-// 		continue
-// 	}
-
-// 	response = append(response, models.ToDoListResponse{
-// 		ID:                 todo.ID,
-// 		Owner:              todo.Owner,
-// 		Messages:           todo.Messages,
-// 		CreatedAt:          todo.CreatedAt,
-// 		UpdatedAt:          todo.UpdatedAt,
-// 		DeletedAt:          todo.DeletedAt.Time,
-// 		ListCompletionRate: todo.ListCompletionRate,
-// 	})
-// }
+type MessageResponse struct {
+	ToDoListID int    `json:"todolistid"`
+	Content    string `json:"content"`
+	IsItDone   bool   `json:"isitdone"`
+}

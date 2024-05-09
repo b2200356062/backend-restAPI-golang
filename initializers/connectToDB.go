@@ -26,6 +26,6 @@ func ConnectToDB() {
 	}
 
 	// auto migration for create, update and delete times
-	DB.AutoMigrate(&models.User{})
+	DB.AutoMigrate(&models.User{}, &models.ToDoList{}, &models.ToDoListMessage{})
 
 }

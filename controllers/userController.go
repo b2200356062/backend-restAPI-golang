@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"staj/initializers"
 	"staj/models"
 	"time"
@@ -20,6 +19,7 @@ func SignUp(c *gin.Context) {
 		Name     string
 		Email    string
 		Password string
+		Type     string
 	}
 
 	if c.Bind(&body) != nil {
@@ -42,19 +42,13 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	fmt.Print("after hash ")
-
-	user := models.User{Name: body.Name, Email: body.Email, Password: string(hash)}
-
-	fmt.Print("after user ")
+	user := models.User{Name: body.Name, Email: body.Email, Password: string(hash), Type: body.Type}
 
 	result := initializers.DB.Create(&user)
 
-	fmt.Print("after result")
-
 	if result.Error != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "failed to create user",
+			"error": "failed to create user: user already exists in database",
 		})
 		return
 	}
@@ -70,6 +64,7 @@ func Login(c *gin.Context) {
 		Name     string
 		Email    string
 		Password string
+		Type     string
 	}
 
 	if c.Bind(&body) != nil {
@@ -85,7 +80,7 @@ func Login(c *gin.Context) {
 
 	initializers.DB.First(&user, "email = ?", body.Email)
 
-	// if no user with the requested email in database
+	// if no user with the requested email
 	if user.ID == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid email or password",
@@ -110,8 +105,8 @@ func Login(c *gin.Context) {
 		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(), // expires in 30 days
 	})
 
-	// get token from environment and hash it
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	// get random secret token and hash it
+	tokenString, err := token.SignedString([]byte("sgljg3ı2jg902gfjdskfasjfndlFSOEJFSAFO2IFVUNDWşdfmhbng230f9j2efndsjgna423u"))
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -121,6 +116,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	if user.Type == "first" {
+		// görmeyi engelle veya görmeyi sağla
+		fmt.Print("user type: ", user.Type)
+	}
+
+	// success
 	c.JSON(200, gin.H{
 		"token": tokenString,
 	})

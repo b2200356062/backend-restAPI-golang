@@ -8,7 +8,6 @@ import (
 )
 
 func init() {
-	initializers.LoadEnvVariables()
 	initializers.ConnectToDB()
 }
 
@@ -17,8 +16,19 @@ func main() {
 	router := gin.Default()
 
 	router.POST("/signup", controllers.SignUp)
+
 	router.POST("/login", controllers.Login)
 
-	router.Run()
+	router.POST("/createlist", controllers.CreateTODOList)
+
+	router.GET("/getlists", controllers.GetToDoLists)
+
+	router.PUT("/deletelist/:id", controllers.DeleteToDoList)
+
+	router.POST("/createmessage", controllers.CreateToDoMessage)
+
+	router.PUT("/deletemessage/:id", controllers.DeleteToDoMessage)
+
+	router.Run("localhost:8080")
 
 }

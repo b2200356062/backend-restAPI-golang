@@ -27,12 +27,10 @@ func SignUp(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "failed to read body",
 		})
-
 		return
 	}
 
 	// hashing password
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
 	if err != nil {
@@ -72,7 +70,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "failed to read body",
 		})
-
 		return
 	}
 
@@ -85,7 +82,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid email or password",
 		})
-
 		return
 	}
 
@@ -95,7 +91,6 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid password",
 		})
-
 		return
 	}
 
@@ -115,22 +110,24 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if user.Type == "first" {
-		// görmeyi engelle veya görmeyi sağla
-		fmt.Print("user type: ", user.Type)
-	}
-
 	c.SetSameSite(http.SameSiteLaxMode)
 
-	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true) // false can be true
+	// login using cookies to send and get jwt token
+	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
+
+	c.JSON(200, gin.H{
+		"message": fmt.Sprintf("Login successfull, JWT Token for this user: %s", tokenString),
+	})
 }
 
+// gets a pointer to current logged in user
 func getCurrentUser(c *gin.Context) *models.User {
+
 	user, _ := c.Get("user")
-	// Type assert user to models.User
+
 	userModel, ok := user.(models.User)
 	if !ok {
-		// Handle the case where user is not of type models.User
+
 		return nil
 	}
 	return &userModel

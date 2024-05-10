@@ -6,27 +6,27 @@ import (
 
 type ToDoList struct {
 	gorm.Model
-	Owner              string            `json:"owner"`
-	ListCompletionRate float64           `json:"listcompletionrate"`
+	Owner              string            `json:"list owner"`
+	ListCompletionRate float64           `json:"list completion rate"`
 	Messages           []ToDoListMessage `json:"messages"`
 }
 
 type ToDoListMessage struct {
 	gorm.Model
-	ToDoListID int    `json:"todolistid"`
+	ToDoListID int    `json:"to do list id"`
 	Content    string `json:"content"`
-	IsItDone   bool   `json:"isitdone"`
+	IsItDone   bool   `json:"is it done"`
 }
 
 // response for encapsulation of the TO-DO list and messages
-
+// i purposefully hid the time stamps from users. it can be made visible with just a few lines.
 type ToDoListResponse struct {
-	Messages           []ToDoListMessage `json:"messages"`
-	ListCompletionRate float64           `json:"listcompletionrate"`
+	Owner              string            `json:"list owner"`
+	Messages           []MessageResponse `json:"messages"`
+	ListCompletionRate float64           `json:"list completion rate"`
 }
 
 type MessageResponse struct {
-	ToDoListID int    `json:"todolistid"`
-	Content    string `json:"content"`
-	IsItDone   bool   `json:"isitdone"`
+	Content  string `json:"content"`
+	IsItDone bool   `json:"is it done"`
 }

@@ -49,10 +49,6 @@ func RequireAuth(c *gin.Context) {
 			c.AbortWithStatusJSON(401, "Error: You are not authorized. Please Login.")
 		}
 
-		// if user.Type == "first" {
-		// 	c.AbortWithStatusJSON(401, "Error: You are not authorized.")
-		// }
-
 		// attach to request
 		c.Set("user", user)
 

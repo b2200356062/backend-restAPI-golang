@@ -65,24 +65,10 @@ func CreateTODOList(c *gin.Context) {
 
 func GetToDoLists(c *gin.Context) {
 
-	var todolists models.ToDoList
+	var todolists []models.ToDoList
 
 	// gets the current user's name,
 	owner := getCurrentUser(c)
-
-	// returns todo lists with messages loaded
-	result := initializers.DB.Model(&models.ToDoList{}).Where("owner = ?", owner.Name).Preload("Messages").Find(&todolists)
-
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve TO-DO list",
-		})
-		return
-	}
-
-	var listResponse models.ToDoListResponse
-	listResponse.Messages = todolists.Messages
-	listResponse.ListCompletionRate = todolists.ListCompletionRate
 
 	// if list is empty;
 	if owner.HasList == 0 {
@@ -91,10 +77,37 @@ func GetToDoLists(c *gin.Context) {
 		})
 		return
 	}
+	// If the user is of type "second", retrieve all the ToDoLists
+	if owner.Type == "second" {
+		result := initializers.DB.Model(&models.ToDoList{}).Preload("Messages").Find(&todolists)
+		if result.Error != nil {
+			fmt.Print("hata")
+		}
+	} else {
+		// If the user is of type "second", retrieve all the ToDoLists
+		result := initializers.DB.Model(&models.ToDoList{}).Where("owner = ?", owner.Name).Preload("Messages").Find(&todolists)
+		if result.Error != nil {
+			fmt.Print("hata2")
+		}
+	}
+	var listResponses []models.ToDoListResponse
 
-	// return response
+	// map the messages from TO-DO lists to response entities
+	for _, todolist := range todolists {
+		var listResponse models.ToDoListResponse
+		listResponse.Owner = todolist.Owner
+		for _, message := range todolist.Messages {
+			listResponse.Messages = append(listResponse.Messages, models.MessageResponse{
+				Content:  message.Content,
+				IsItDone: message.IsItDone,
+			})
+		}
+		listResponse.ListCompletionRate = todolist.ListCompletionRate
+		listResponses = append(listResponses, listResponse)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		fmt.Sprintf("TO-DO List for User %s", owner.Name): listResponse,
+		fmt.Sprintf("TO-DO List(s) for User %s", owner.Name): listResponses,
 	})
 }
 

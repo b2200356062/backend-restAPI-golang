@@ -16,6 +16,7 @@ func main() {
 
 	router := gin.Default()
 
+	// functions implemented
 	router.POST("/signup", controllers.SignUp)
 
 	router.POST("/login", controllers.Login)
@@ -31,8 +32,6 @@ func main() {
 	router.PUT("/deletemessage/:id", middleware.RequireAuth, controllers.DeleteToDoMessage)
 
 	router.PUT("/updatemessage/:id", middleware.RequireAuth, controllers.UpdateToDoMessage)
-
-	//router.GET("/validate", middleware.RequireAuth, controllers.Validate)
 
 	router.Run("localhost:8080")
 

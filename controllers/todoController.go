@@ -45,7 +45,7 @@ func CreateTODOList(c *gin.Context) {
 	}
 
 	// when a user creates a TO-DO list, users "HasList" attribute is equal to that TO-DO lists ID
-	owner.HasList = int(todolist.ID)
+	owner.HasList = todolist.ID
 	// update database
 
 	result2 := initializers.DB.Save(owner)
@@ -98,6 +98,7 @@ func GetToDoLists(c *gin.Context) {
 		listResponse.Owner = todolist.Owner
 		for _, message := range todolist.Messages {
 			listResponse.Messages = append(listResponse.Messages, models.MessageResponse{
+				ID:       message.ID,
 				Content:  message.Content,
 				IsItDone: message.IsItDone,
 			})
@@ -163,7 +164,7 @@ func DeleteToDoList(c *gin.Context) {
 func CreateToDoMessage(c *gin.Context) {
 
 	var body struct {
-		ToDoListID int
+		ToDoListID uint
 		Content    string
 		IsItDone   bool
 	}
@@ -222,7 +223,7 @@ func UpdateToDoMessage(c *gin.Context) {
 
 	var body struct {
 		Content  string `json:"content"`
-		IsItDone bool   `json:"isitdone"`
+		IsItDone bool   `json:"is it done"`
 	}
 
 	if c.Bind(&body) != nil {

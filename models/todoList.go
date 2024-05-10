@@ -13,7 +13,7 @@ type ToDoList struct {
 
 type ToDoListMessage struct {
 	gorm.Model
-	ToDoListID int    `json:"to do list id"`
+	ToDoListID uint   `json:"to do list id"`
 	Content    string `json:"content"`
 	IsItDone   bool   `json:"is it done"`
 }
@@ -27,6 +27,7 @@ type ToDoListResponse struct {
 }
 
 type MessageResponse struct {
+	ID       uint   `json:"id"`
 	Content  string `json:"content"`
 	IsItDone bool   `json:"is it done"`
 }

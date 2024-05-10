@@ -116,7 +116,7 @@ func Login(c *gin.Context) {
 	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
 
 	c.JSON(200, gin.H{
-		"message": fmt.Sprintf("Login successfull, JWT Token for this user: %s", tokenString),
+		"message": fmt.Sprintf("Login successful, JWT Token for this user: %s", tokenString),
 	})
 }
 

@@ -1,7 +1,6 @@
 
 ## Melih Ercan
 
-I haven't made a project with GO before so this is my first time.
 I mainly used Gin Framework and Gorm library for this project. JWT Tokens and authentication part is done 
 with go-jwt library. I tried to stick to MVC architecture pattern with controller and models. 
 I implemented an extra signup function to create users in to the database.
